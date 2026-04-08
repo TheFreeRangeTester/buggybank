@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+  CANCELLED
+}
+
+enum HintTarget {
+  LOGIN
+  DASHBOARD
+  TRANSFERS
+  TRANSACTIONS
+  PROFILE
+}
+
+enum BugSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id                 String        @id @default(cuid())
+  email              String        @unique
+  password           String
+  fullName           String
+  phone              String?
+  preferredLanguage  String        @default("es-NZ")
+  qaAccess           Boolean       @default(false)
+  cachedTotalBalance Float         @default(0)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  accounts           Account[]
+  initiatedTransfers Transaction[] @relation("InitiatedTransfers")
+}
+
+model Account {
+  id                String        @id @default(cuid())
+  userId            String
+  type              AccountType
+  accountNumber     String        @unique
+  currency          String        @default("NZD")
+  balance           Float
+  isActive          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outgoingTransfers Transaction[] @relation("FromAccount")
+  incomingTransfers Transaction[] @relation("ToAccount")
+
+  @@index([userId, type])
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  initiatorId     String
+  fromAccountId   String
+  toAccountId     String
+  amount          Float
+  note            String?
+  status          TransactionStatus @default(COMPLETED)
+  failureReason   String?
+  referenceCode   String            @unique
+  idempotencyKey  String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  initiator       User              @relation("InitiatedTransfers", fields: [initiatorId], references: [id], onDelete: Cascade)
+  fromAccount     Account           @relation("FromAccount", fields: [fromAccountId], references: [id], onDelete: Cascade)
+  toAccount       Account           @relation("ToAccount", fields: [toAccountId], references: [id], onDelete: Cascade)
+
+  @@index([initiatorId, createdAt])
+  @@index([fromAccountId, createdAt])
+  @@index([toAccountId, createdAt])
+  @@index([status, createdAt])
+}
+
+model Hint {
+  id          String      @id @default(cuid())
+  target      HintTarget
+  level       Int
+  title       String
+  message     String
+  isActive    Boolean     @default(true)
+  bugFlagId   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  bugFlag     BugFlag?    @relation(fields: [bugFlagId], references: [id], onDelete: SetNull)
+
+  @@index([target, level])
+}
+
+model BugFlag {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  title       String
+  description String
+  area        String
+  severity    BugSeverity
+  isEnabled   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  hints       Hint[]
+}
