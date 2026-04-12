@@ -1,4 +1,4 @@
-export type QaScope = "global" | "login" | "dashboard" | "transfers" | "transactions" | "profile";
+export type QaScope = "global" | "login" | "dashboard" | "transfers" | "transactions" | "challenges" | "profile";
 
 export type QaHintPlacement = "banner" | "tooltip" | "observation";
 
@@ -17,6 +17,9 @@ export type QaEvent =
   | "transfer_duplicate"
   | "transactions_view"
   | "transactions_filter_change"
+  | "challenges_view"
+  | "challenges_filter_change"
+  | "challenge_marked"
   | "profile_view"
   | "profile_submit"
   | "profile_saved";
@@ -133,6 +136,34 @@ export const qaHintsCatalog: QaHintItem[] = [
     title: "Combinación de filtros",
     message: "Combiná búsqueda corta con tipo de movimiento para confirmar estabilidad del resultado.",
     trigger: { event: "transactions_filter_change", minCount: 2 }
+  },
+  {
+    id: "challenges-prioritize-risk",
+    scope: "challenges",
+    placement: "banner",
+    severity: "low",
+    difficulty: "starter",
+    title: "Prioridad por riesgo",
+    message: "¿Qué desafío atacarías primero si tuvieras 20 minutos de testing?"
+  },
+  {
+    id: "challenges-hybrid-coverage",
+    scope: "challenges",
+    placement: "tooltip",
+    severity: "medium",
+    difficulty: "intermediate",
+    title: "Manual + automation",
+    message: "Los casos híbridos ayudan a detectar bugs y además prevenir regresiones futuras."
+  },
+  {
+    id: "challenges-after-marking",
+    scope: "challenges",
+    placement: "observation",
+    severity: "low",
+    difficulty: "advanced",
+    title: "Trazabilidad",
+    message: "Cuando marques un caso como resuelto, anota evidencia breve para facilitar debugging.",
+    trigger: { event: "challenge_marked", minCount: 1 }
   },
   {
     id: "profile-edge-cases",

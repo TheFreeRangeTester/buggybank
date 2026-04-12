@@ -7,6 +7,7 @@ import type { QaScope } from "@/data/qa-hints-catalog";
 const scopeByPath = (pathname: string): QaScope => {
   if (pathname.startsWith("/transfers")) return "transfers";
   if (pathname.startsWith("/transactions")) return "transactions";
+  if (pathname.startsWith("/challenges")) return "challenges";
   if (pathname.startsWith("/profile")) return "profile";
   if (pathname.startsWith("/dashboard")) return "dashboard";
   if (pathname.startsWith("/login")) return "login";
